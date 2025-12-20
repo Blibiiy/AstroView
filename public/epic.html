@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Earth – AstroBot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-black text-slate-100 flex flex-col">
+    <!-- Top bar -->
+    <header class="w-full bg-black/95 border-b border-slate-800">
+      <div
+        class="max-w-6xl mx-auto flex items-center justify-between px-4 py-2 text-[0.7rem]"
+      >
+        <span class="tracking-[0.3em] uppercase text-slate-100">ASTROBOT</span>
+        <nav class="flex gap-4 text-slate-300">
+          <a href="index.html" class="hover:underline underline-offset-4"
+            >Home</a
+          >
+          <a href="images.html" class="hover:underline underline-offset-4"
+            >Images</a
+          >
+          <a href="epic.html" class="underline underline-offset-4">Earth</a>
+          <a href="tech.html" class="hover:underline underline-offset-4"
+            >Tech</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="flex-1 w-full bg-[#161616] pb-10">
+      <div class="max-w-3xl mx-auto px-4 pt-8 flex flex-col gap-8">
+        <!-- Intro -->
+        <section class="text-center space-y-2">
+          <h1 class="text-lg sm:text-xl font-semibold">Earth from EPIC</h1>
+          <p class="text-[0.8rem] text-slate-300">
+            Citra penuh Bumi dari kamera EPIC di satelit DSCOVR.
+          </p>
+        </section>
+
+        <!-- Main image + info -->
+        <section
+          class="w-full rounded-md border border-slate-800 bg-black/85 p-4 space-y-3 text-[0.8rem]"
+        >
+          <div
+            id="epic-main-image"
+            class="w-full h-[260px] sm:h-[320px] bg-slate-900 flex items-center justify-center overflow-hidden rounded-sm"
+          >
+            <p class="text-xs text-slate-400">Loading Earth image...</p>
+          </div>
+
+          <div class="space-y-1">
+            <h2
+              id="epic-main-title"
+              class="text-sm font-semibold text-slate-50"
+            >
+              -
+            </h2>
+            <p id="epic-main-date" class="text-[0.7rem] text-slate-400">
+              Date: -
+            </p>
+            <p
+              id="epic-main-caption"
+              class="text-[0.75rem] text-slate-300 leading-relaxed whitespace-pre-line"
+            >
+              -
+            </p>
+          </div>
+        </section>
+
+        <!-- Thumbnails -->
+        <section class="space-y-2 text-[0.8rem]">
+          <p class="text-[0.75rem] text-slate-300 text-center">
+            Beberapa frame terbaru:
+          </p>
+          <div
+            id="epic-thumbs"
+            class="grid gap-3 sm:grid-cols-3"
+          >
+            <!-- isi via JS -->
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="w-full bg-black/95 border-t border-slate-800 text-[0.7rem] mt-auto"
+    >
+      <div
+        class="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between text-slate-400"
+      >
+        <span>AstroBot &copy; 2025</span>
+        <span>
+          Data:
+          <a
+            href="https://epic.gsfc.nasa.gov/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-blue-400 hover:underline"
+            >NASA EPIC</a
+          >
+        </span>
+      </div>
+    </footer>
+
+    <script src="/epic.js"></script>
+  </body>
+</html>

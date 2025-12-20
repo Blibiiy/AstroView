@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AstroView</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-black text-slate-100 flex flex-col">
+    <!-- Top bar -->
+    <header class="w-full bg-black/95 border-b border-slate-800">
+      <div
+        class="max-w-6xl mx-auto flex items-center justify-between px-4 py-2 text-[0.7rem]"
+      >
+        <span class="tracking-[0.3em] uppercase text-slate-100">AstroView</span>
+        <nav class="flex gap-4 text-slate-300">
+          <a href="index.html" class="underline underline-offset-4">Home</a>
+          <a href="images.html" class="hover:underline underline-offset-4"
+            >Images</a
+          >
+          <a href="events.html" class="hover:underline underline-offset-4"
+            >Events</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <!-- Banner -->
+    <section class="w-full bg-black border-b border-slate-900">
+      <div class="relative w-full overflow-hidden">
+        <img
+          src="/space.png"
+          alt="Star field"
+          class="block w-full h-[260px] sm:h-[320px] object-cover"
+        />
+        <div
+          class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/10 to-black/80 pointer-events-none"
+        ></div>
+        <div
+          class="absolute inset-0 flex flex-col items-center justify-center text-center px-4 pointer-events-none"
+        >
+          <h1
+            class="text-2xl sm:text-3xl font-semibold tracking-[0.3em] uppercase text-slate-50"
+          >
+            AstroView
+          </h1>
+        </div>
+        <div
+          class="absolute bottom-2 left-1/2 -translate-x-1/2 text-center text-xs sm:text-sm text-slate-100"
+        >
+          Explore space with real images and data from NASA
+        </div>
+      </div>
+    </section>
+
+    <!-- Main column (tengah) -->
+    <main class="w-full bg-[#161616] pb-10 flex-1">
+      <div class="max-w-3xl mx-auto px-4 pt-8 flex flex-col gap-10">
+        <!-- Intro -->
+        <section class="text-center space-y-2">
+          <h2 class="text-lg sm:text-xl font-semibold">AstroView</h2>
+          <p class="text-[0.8rem] text-slate-300">
+            Satu halaman kecil buat main‑main dengan data NASA. Gambar, event
+            alam, dan APOD.
+          </p>
+        </section>
+
+        <!-- Pilihan fitur (2 kartu, center) -->
+        <section class="space-y-3 text-center">
+
+          <div
+            class="flex flex-wrap justify-center gap-6 text-[0.8rem]"
+          >
+            <!-- Events -->
+            <a
+              href="events.html"
+              class="w-[230px] flex flex-col items-center gap-2 rounded-xl border border-slate-800 bg-black/90 px-4 py-4 hover:border-emerald-400 transition"
+            >
+              <div
+                class="h-20 w-full bg-center bg-cover rounded-md"
+                style="background-image: url('/Events.jpg');"
+              ></div>
+              <span class="text-xs font-semibold mt-2">Events</span>
+              <span class="text-[0.7rem] text-slate-400">
+                Lihat kejadian alam yang lagi aktif (kebakaran, badai, dsb).
+              </span>
+            </a>
+
+            <!-- Images -->
+            <a
+              href="images.html"
+              class="w-[230px] flex flex-col items-center gap-2 rounded-xl border border-slate-800 bg-black/90 px-4 py-4 hover:border-blue-400 transition"
+            >
+              <div
+                class="h-20 w-full bg-center bg-cover rounded-md"
+                style="background-image: url('https://images-assets.nasa.gov/image/PIA01322/PIA01322~orig.jpg');"
+              ></div>
+              <span class="text-xs font-semibold mt-2">Images</span>
+              <span class="text-[0.7rem] text-slate-400">
+                Cari foto dari koleksi besar NASA.
+              </span>
+            </a>
+          </div>
+        </section>
+
+        <!-- APOD -->
+        <section
+          class="w-full rounded-md border border-slate-800 bg-black/85 p-4 text-[0.8rem] space-y-3"
+        >
+          <div class="text-center space-y-1">
+            <h3 class="text-xs font-semibold tracking-[0.18em] uppercase">
+              Today’s picture
+            </h3>
+            <p class="text-[0.75rem] text-slate-300">
+              Astronomy Picture of the Day dari NASA.
+            </p>
+          </div>
+
+          <div class="space-y-2">
+            <div
+              id="apod-media"
+              class="w-full h-[220px] bg-slate-900 flex items-center justify-center overflow-hidden rounded-sm"
+            >
+              <p class="text-xs text-slate-400">Loading image...</p>
+            </div>
+            <div class="space-y-1">
+              <h4
+                id="apod-title"
+                class="text-sm font-semibold text-slate-50"
+              >
+                ...
+              </h4>
+              <div
+                id="apod-date"
+                class="text-[0.7rem] text-slate-400"
+              >
+                Date: -
+              </div>
+              <p
+                id="apod-excerpt"
+                class="text-[0.75rem] text-slate-300 leading-relaxed whitespace-pre-line"
+              >
+                ...
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Subscribe -->
+        <section
+          class="w-full rounded-md border border-slate-800 bg-black/85 p-4 text-[0.8rem] space-y-2"
+        >
+          <div class="space-y-1">
+            <p class="text-xs font-semibold">
+              Kirim APOD ke email
+            </p>
+            <p class="text-[0.75rem] text-slate-300">
+              Satu gambar per hari, langsung dari NASA.
+            </p>
+          </div>
+          <form
+            id="subscribe-form"
+            class="flex flex-col sm:flex-row gap-2 text-[0.75rem]"
+          >
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              placeholder="Email kamu"
+              class="flex-1 rounded-full border border-slate-600 bg-black px-3 py-1 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            <button
+              type="submit"
+              class="rounded-full bg-emerald-500 px-3 py-1 font-medium text-slate-950 hover:bg-emerald-400 transition"
+            >
+              Subscribe
+            </button>
+          </form>
+          <p
+            id="subscribe-message"
+            class="text-[0.75rem] text-slate-300"
+          ></p>
+        </section>
+      </div>
+    </main>
+
+    <!-- Visitor bar -->
+    <div class="w-full bg-[#171717] border-t border-slate-800 text-[0.7rem]">
+      <div
+        class="max-w-3xl mx-auto px-4 py-1.5 flex items-center justify-between gap-3"
+      >
+        <div class="flex items-center gap-1.5 text-slate-400">
+          <span
+            class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.9)]"
+          ></span>
+          <span class="uppercase tracking-[0.2em]">Visitors</span>
+        </div>
+        <div class="flex-1 text-right text-slate-100">
+          <span id="visitor-count">0</span>
+          <span>sekarang online ·</span>
+          <span id="visitor-total" class="text-emerald-400">0</span>
+          <span>total kunjungan</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer
+      class="w-full bg-black/95 border-t border-slate-800 text-[0.7rem]"
+    >
+      <div
+        class="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between text-slate-400"
+      >
+        <span>AstroView &copy; 2025</span>
+        <span>
+          Data:
+          <a
+            href="https://api.nasa.gov"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-blue-400 hover:underline"
+            >NASA Open APIs</a
+          >
+        </span>
+      </div>
+    </footer>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/home.js"></script>
+  </body>
+</html>

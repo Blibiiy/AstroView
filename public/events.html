@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Events – AstroView</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-black text-slate-100 flex flex-col">
+    <!-- Top bar -->
+    <header class="w-full bg-black/95 border-b border-slate-800">
+      <div
+        class="max-w-6xl mx-auto flex items-center justify-between px-4 py-2 text-[0.7rem]"
+      >
+        <span class="tracking-[0.3em] uppercase text-slate-100">AstroView</span>
+        <nav class="flex gap-4 text-slate-300">
+          <a href="index.html" class="hover:underline underline-offset-4"
+            >Home</a
+          >
+          <a href="images.html" class="hover:underline underline-offset-4"
+            >Images</a
+          >
+          <a href="events.html" class="underline underline-offset-4"
+            >Events</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="flex-1 w-full bg-[#161616] pb-10">
+      <div class="max-w-4xl mx-auto px-4 pt-8 flex flex-col gap-6">
+        <!-- Intro -->
+        <section class="text-center space-y-2">
+          <h1 class="text-lg sm:text-xl font-semibold">
+            Natural Events (EONET)
+          </h1>
+          <p class="text-[0.8rem] text-slate-300">
+            Kejadian alam yang sedang aktif berdasarkan data NASA EONET.
+          </p>
+        </section>
+
+        <!-- Filter bar sederhana -->
+        <section
+          class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[0.8rem]"
+        >
+          <div class="flex items-center gap-2">
+            <label
+              for="events-days"
+              class="text-[0.75rem] text-slate-300"
+              >Rentang hari:</label
+            >
+            <select
+              id="events-days"
+              class="rounded-md border border-slate-700 bg-black px-2 py-1 text-[0.75rem] text-slate-100"
+            >
+              <option value="3">3 hari</option>
+              <option value="7" selected>7 hari</option>
+              <option value="14">14 hari</option>
+              <option value="30">30 hari</option>
+            </select>
+          </div>
+
+          <button
+            id="events-refresh"
+            type="button"
+            class="rounded-full border border-slate-600 px-3 py-1 text-[0.75rem] hover:border-emerald-400 hover:text-emerald-300 transition"
+          >
+            Refresh
+          </button>
+        </section>
+
+        <!-- Message -->
+        <section>
+          <p
+            id="events-message"
+            class="text-[0.75rem] text-slate-300"
+          >
+            Memuat data EONET...
+          </p>
+        </section>
+
+        <!-- List events: grid mirip Images -->
+        <section class="space-y-3 text-[0.8rem]">
+          <div
+            id="events-list"
+            class="grid gap-4 sm:grid-cols-2"
+          >
+            <!-- isi via JS -->
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="w-full bg-black/95 border-t border-slate-800 text-[0.7rem] mt-auto"
+    >
+      <div
+        class="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between text-slate-400"
+      >
+        <span>AstroView &copy; 2025</span>
+        <span>
+          Data:
+          <a
+            href="https://eonet.gsfc.nasa.gov/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-blue-400 hover:underline"
+            >NASA EONET</a
+          >
+        </span>
+      </div>
+    </footer>
+
+    <script src="/events.js"></script>
+  </body>
+</html>

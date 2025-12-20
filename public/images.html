@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Images – AstroView</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-black text-slate-100 flex flex-col">
+    <!-- Top bar -->
+    <header class="w-full bg-black/95 border-b border-slate-800">
+      <div
+        class="max-w-6xl mx-auto flex items-center justify-between px-4 py-2 text-[0.7rem]"
+      >
+        <span class="tracking-[0.3em] uppercase text-slate-100">AstroView</span>
+        <nav class="flex gap-4 text-slate-300">
+          <a href="index.html" class="hover:underline underline-offset-4"
+            >Home</a
+          >
+          <a href="images.html" class="underline underline-offset-4"
+            >Images</a
+          >
+          <a href="events.html" class="hover:underline underline-offset-4"
+            >Events</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <main class="flex-1 w-full bg-[#161616] pb-10">
+      <div class="max-w-4xl mx-auto px-4 pt-8 flex flex-col gap-6">
+        <!-- Intro -->
+        <section class="text-center space-y-2">
+          <h1 class="text-lg sm:text-xl font-semibold">NASA Images</h1>
+          <p class="text-[0.8rem] text-slate-300">
+            Cari foto dari NASA Image and Video Library.
+          </p>
+        </section>
+
+        <!-- Search bar -->
+        <section class="space-y-2">
+          <form
+            id="image-search-form"
+            class="flex flex-col sm:flex-row gap-2 text-[0.8rem]"
+          >
+            <input
+              type="text"
+              id="image-query"
+              placeholder="Contoh: nebula, Saturn, Apollo 11"
+              class="flex-1 rounded-full border border-slate-600 bg-black px-3 py-1.5 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              required
+            />
+            <button
+              type="submit"
+              class="rounded-full bg-blue-500 px-4 py-1.5 font-medium text-slate-950 hover:bg-blue-400 transition text-[0.8rem]"
+            >
+              Cari
+            </button>
+          </form>
+          <p id="image-search-message" class="text-[0.75rem] text-slate-300">
+            &nbsp;
+          </p>
+        </section>
+
+        <!-- Hasil -->
+        <section class="space-y-3">
+          <div
+            id="image-results"
+            class="grid gap-4 sm:grid-cols-2 text-[0.8rem]"
+          >
+            <!-- cards isi via JS -->
+          </div>
+
+          <!-- Pagination -->
+          <div
+            id="image-pagination"
+            class="flex items-center justify-center gap-2 text-[0.75rem] text-slate-300 mt-2"
+          >
+            <!-- buttons isi via JS -->
+          </div>
+        </section>
+      </div>
+
+      <!-- Modal detail image -->
+      <div
+        id="image-detail-modal"
+        class="fixed inset-0 bg-black/70 flex items-center justify-center px-4 z-40 hidden"
+      >
+        <div
+          class="max-w-3xl w-full bg-[#111] border border-slate-700 rounded-lg overflow-hidden shadow-xl"
+        >
+          <div class="flex items-center justify-between px-4 py-2 border-b border-slate-700">
+            <h2
+              id="image-detail-title"
+              class="text-sm sm:text-base font-semibold text-slate-50"
+            >
+              Detail
+            </h2>
+            <button
+              id="image-detail-close"
+              type="button"
+              class="text-[0.75rem] text-slate-400 hover:text-slate-100"
+            >
+              Close
+            </button>
+          </div>
+
+          <div class="flex flex-col md:flex-row">
+            <div class="md:w-1/2 bg-black">
+              <img
+                id="image-detail-img"
+                src=""
+                alt=""
+                class="w-full h-full max-h-[320px] object-contain bg-black"
+              />
+            </div>
+            <div class="md:w-1/2 px-4 py-3 space-y-2 text-[0.8rem]">
+              <p
+                id="image-detail-desc"
+                class="text-[0.75rem] text-slate-200 leading-relaxed max-h-[260px] overflow-y-auto whitespace-pre-line"
+              ></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer
+      class="w-full bg-black/95 border-t border-slate-800 text-[0.7rem] mt-auto"
+    >
+      <div
+        class="max-w-6xl mx-auto px-4 py-2 flex items-center justify-between text-slate-400"
+      >
+        <span>AstroView &copy; 2025</span>
+        <span>
+          Data:
+          <a
+            href="https://images.nasa.gov/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-blue-400 hover:underline"
+            >NASA Image and Video Library</a
+          >
+        </span>
+      </div>
+    </footer>
+
+    <script src="/images.js"></script>
+  </body>
+</html>
