@@ -12,7 +12,6 @@ async function hubungkanBasisData() {
     await mongoose.connect(URL_MONGO, {
       // Untuk Mongoose v6+ opsi dasar sudah cukup, tidak perlu konfigurasi tambahan
     });
-    console.log('Terhubung ke MongoDB:', URL_MONGO);
   } catch (kesalahan) {
     // Jika koneksi gagal, tampilkan pesan kesalahan dan hentikan proses
     console.error('Gagal konek MongoDB:', kesalahan.message);
