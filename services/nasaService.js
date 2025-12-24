@@ -1,165 +1,185 @@
+// Menggunakan axios untuk melakukan permintaan HTTP ke API NASA
 const axios = require('axios');
 
-const NASA_BASE_URL = 'https://api.nasa.gov';
-const NASA_API_KEY = process.env.NASA_API_KEY;
+// Konstanta dasar untuk URL dan kunci API NASA
+const URL_DASAR_NASA = 'https://api.nasa.gov';
+const KUNCI_API_NASA = process.env.NASA_API_KEY;
 
-function formatDate(date = new Date()) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+// Fungsi utilitas untuk mengubah objek Date menjadi string YYYY-MM-DD
+function formatTanggal(tanggal = new Date()) {
+  const tahun = tanggal.getFullYear();
+  const bulan = String(tanggal.getMonth() + 1).padStart(2, '0');
+  const hari = String(tanggal.getDate()).padStart(2, '0');
+  return `${tahun}-${bulan}-${hari}`;
 }
 
-// APOD dasar
-async function getApod(date = null) {
-  if (!NASA_API_KEY) {
+// ========================
+// APOD (Astronomy Picture of the Day)
+// ========================
+
+// Mengambil data APOD untuk tanggal tertentu (atau hari ini bila kosong)
+async function ambilApod(tanggal = null) {
+  if (!KUNCI_API_NASA) {
     throw new Error('NASA_API_KEY belum di-set di .env');
   }
 
-  const params = { api_key: NASA_API_KEY };
-  if (date) params.date = date;
+  const parameter = { api_key: KUNCI_API_NASA };
+  if (tanggal) parameter.date = tanggal;
 
-  const url = `${NASA_BASE_URL}/planetary/apod`;
-  const response = await axios.get(url, { params });
-  return response.data;
+  const url = `${URL_DASAR_NASA}/planetary/apod`;
+  const respons = await axios.get(url, { params: parameter });
+  return respons.data;
 }
 
-// APOD dengan fallback: coba today, kalau gagal -> yesterday
-async function getApodWithFallback() {
-  const today = new Date();
-  const todayStr = formatDate(today);
+// Mengambil APOD dengan mekanisme fallback:
+// 1. Coba ambil APOD hari ini.
+// 2. Jika gagal (misal belum tersedia), coba ambil APOD kemarin.
+async function ambilApodDenganCadangan() {
+  const hariIni = new Date();
+  const teksHariIni = formatTanggal(hariIni);
 
   try {
-    const apodToday = await getApod(todayStr);
-    return { apod: apodToday, usedDate: todayStr };
-  } catch (err) {
+    const apodHariIni = await ambilApod(teksHariIni);
+    return { apod: apodHariIni, tanggalDipakai: teksHariIni };
+  } catch (kesalahan) {
     console.error(
-      'APOD untuk hari ini gagal, coba fallback ke yesterday:',
-      err.message
+      'APOD untuk hari ini gagal, coba fallback ke kemarin:',
+      kesalahan.message
     );
 
-    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-    const yStr = formatDate(yesterday);
+    const kemarin = new Date(hariIni.getTime() - 24 * 60 * 60 * 1000);
+    const teksKemarin = formatTanggal(kemarin);
 
-    const apodYesterday = await getApod(yStr);
-    return { apod: apodYesterday, usedDate: yStr };
+    const apodKemarin = await ambilApod(teksKemarin);
+    return { apod: apodKemarin, tanggalDipakai: teksKemarin };
   }
 }
 
-// NASA Image and Video Library - search images
-async function searchNasaImages(query, page = 1) {
-  if (!query) return { items: [], total: 0, perPage: 0 };
+// ========================
+// Pencarian gambar NASA (NASA Image and Video Library)
+// ========================
+
+async function cariGambarNasa(kueri, halaman = 1) {
+  // Jika kueri kosong, langsung kembalikan hasil kosong
+  if (!kueri) return { item: [], total: 0, perHalaman: 0 };
 
   const url = 'https://images-api.nasa.gov/search';
-  const params = {
-    q: query,
+  const parameter = {
+    q: kueri,
     media_type: 'image',
-    page,
+    page: halaman,
   };
 
-  const res = await axios.get(url, { params });
-  const collection = res.data?.collection || {};
-  const itemsRaw = collection.items || [];
-  const meta = collection.metadata || {};
-  const total = meta.total_hits || itemsRaw.length;
-  const perPage = itemsRaw.length;
+  const respons = await axios.get(url, { params: parameter });
+  const koleksi = respons.data?.collection || {};
+  const daftarItemMentah = koleksi.items || [];
+  const metadata = koleksi.metadata || {};
+  const total = metadata.total_hits || daftarItemMentah.length;
+  const perHalaman = daftarItemMentah.length;
 
-  const items = itemsRaw.map((item) => {
-    const data = item.data && item.data[0] ? item.data[0] : {};
-    const linksArr = item.links || [];
-    const firstLink = linksArr[0] || {};
+  // Mengubah struktur data NASA menjadi bentuk yang lebih sederhana
+  const item = daftarItemMentah.map((itemMentah) => {
+    const data = itemMentah.data && itemMentah.data[0] ? itemMentah.data[0] : {};
+    const daftarTautan = itemMentah.links || [];
+    const tautanPertama = daftarTautan[0] || {};
 
-    const nasaId = data.nasa_id || '';
-    const title = data.title || 'Untitled';
-    const description = data.description || '';
+    const idNasa = data.nasa_id || '';
+    const judul = data.title || 'Tanpa judul';
+    const deskripsi = data.description || '';
 
-    // thumbnail / preview (gambar kecil)
-    const thumbUrl = firstLink.href || '';
+    // URL gambar thumbnail / preview
+    const urlKecil = tautanPertama.href || '';
 
-    // halaman / koleksi NASA (bisa JSON / list file) – simpan kalau mau pakai nanti
-    const nasaPageUrl = item.href || '';
+    // URL koleksi NASA (bisa JSON atau daftar file)
+    const urlHalamanNasa = itemMentah.href || '';
 
     return {
-      nasaId,
-      title,
-      description,
-      thumbUrl,
-      nasaPageUrl,
+      idNasa,
+      judul,
+      deskripsi,
+      urlKecil,
+      urlHalamanNasa,
     };
   });
 
-  return { items, total, perPage };
+  return { item, total, perHalaman };
 }
 
-// EONET: recent natural events
-async function getRecentEonetEvents({
-  days = 10,
-  limit = 20,
-  status = 'open',
-  categoryId = null,
-} = {}) {
-  const baseUrl = 'https://eonet.gsfc.nasa.gov/api/v2.1/events';
+// ========================
+// EONET: Kejadian alam terbaru
+// ========================
 
-  const params = {
-    days,
-    limit,
+async function ambilKejadianEonetTerbaru({
+  hari = 10,
+  batas = 20,
+  status = 'open',
+  idKategori = null,
+} = {}) {
+  const urlDasar = 'https://eonet.gsfc.nasa.gov/api/v2.1/events';
+
+  const parameter = {
+    days: hari,
+    limit: batas,
     status,
   };
 
-  if (categoryId) {
-    params.category = categoryId;
+  if (idKategori) {
+    parameter.category = idKategori;
   }
 
-  const res = await axios.get(baseUrl, { params });
-  const events = res.data?.events || [];
+  const respons = await axios.get(urlDasar, { params: parameter });
+  const kejadian = respons.data?.events || [];
 
-  return events.map((ev) => {
-    const id = ev.id;
-    const title = ev.title || 'Untitled event';
-    const description = ev.description || '';
-    const link = ev.link || '';
-    const categories = ev.categories || [];
-    const sources = ev.sources || [];
-    const geometries = ev.geometries || [];
+  // Normalisasi data kejadian EONET menjadi struktur yang lebih mudah digunakan
+  return kejadian.map((kej) => {
+    const id = kej.id;
+    const judul = kej.title || 'Kejadian tanpa judul';
+    const deskripsi = kej.description || '';
+    const tautan = kej.link || '';
+    const daftarKategori = kej.categories || [];
+    const daftarSumber = kej.sources || [];
+    const daftarGeometri = kej.geometries || [];
 
-    const mainCategory = categories[0] || null;
-    const categoryTitle = mainCategory?.title || 'Uncategorized';
+    const kategoriUtama = daftarKategori[0] || null;
+    const judulKategori = kategoriUtama?.title || 'Tanpa kategori';
 
-    const lastGeometry =
-      geometries.length > 0 ? geometries[geometries.length - 1] : null;
+    // Mengambil geometri terakhir sebagai posisi/tanggal terkini
+    const geometriTerakhir =
+      daftarGeometri.length > 0 ? daftarGeometri[daftarGeometri.length - 1] : null;
 
-    let date = null;
-    let coordinates = null;
-    let geometryType = null;
-    if (lastGeometry) {
-      date = lastGeometry.date || null;
-      geometryType = lastGeometry.type || null;
-      coordinates = lastGeometry.coordinates || null;
+    let tanggal = null;
+    let koordinat = null;
+    let jenisGeometri = null;
+    if (geometriTerakhir) {
+      tanggal = geometriTerakhir.date || null;
+      jenisGeometri = geometriTerakhir.type || null;
+      koordinat = geometriTerakhir.coordinates || null;
     }
 
-    const primarySource = sources[0] || null;
+    const sumberUtama = daftarSumber[0] || null;
 
     return {
       id,
-      title,
-      description,
-      link,
-      categoryTitle,
-      categories,
-      date,
-      geometryType,
-      coordinates,
-      sourceId: primarySource?.id || null,
-      sourceTitle: primarySource?.title || null,
-      sourceUrl: primarySource?.url || null,
+      judul,
+      deskripsi,
+      tautan,
+      judulKategori,
+      daftarKategori,
+      tanggal,
+      jenisGeometri,
+      koordinat,
+      idSumber: sumberUtama?.id || null,
+      judulSumber: sumberUtama?.title || null,
+      urlSumber: sumberUtama?.url || null,
     };
   });
 }
 
+// Mengekspor fungsi-fungsi layanan NASA
 module.exports = {
-  getApod,              // dipakai cron & endpoint manual
-  getApodWithFallback,  // dipakai /api/apod/today
-  formatDate,
-  searchNasaImages,
-  getRecentEonetEvents,
+  ambilApod,               // dipakai untuk cron & endpoint manual
+  ambilApodDenganCadangan, // dipakai /api/apod/today
+  formatTanggal,
+  cariGambarNasa,
+  ambilKejadianEonetTerbaru,
 };

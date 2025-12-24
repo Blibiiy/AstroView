@@ -1,102 +1,113 @@
+// Script ini mengatur pencarian dan penampilan gambar NASA di halaman Images
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('image-search-form');
-  const queryInput = document.getElementById('image-query');
-  const msgEl = document.getElementById('image-search-message');
-  const resultsEl = document.getElementById('image-results');
-  const paginationEl = document.getElementById('image-pagination');
+  const formPencarian = document.getElementById('image-search-form');
+  const masukanKueri = document.getElementById('image-query');
+  const pesanPencarianElemen = document.getElementById(
+    'image-search-message'
+  );
+  const hasilGambarElemen = document.getElementById('image-results');
+  const elemenPaginasi = document.getElementById('image-pagination');
 
-  const modalEl = document.getElementById('image-detail-modal');
-  const modalTitleEl = document.getElementById('image-detail-title');
-  const modalImgEl = document.getElementById('image-detail-img');
-  const modalDescEl = document.getElementById('image-detail-desc');
-  const modalCloseBtn = document.getElementById('image-detail-close');
+  const modalDetailElemen = document.getElementById('image-detail-modal');
+  const judulDetailElemen = document.getElementById('image-detail-title');
+  const gambarDetailElemen = document.getElementById('image-detail-img');
+  const deskripsiDetailElemen = document.getElementById(
+    'image-detail-desc'
+  );
+  const tombolTutupModal = document.getElementById('image-detail-close');
 
   if (
-    !form ||
-    !queryInput ||
-    !msgEl ||
-    !resultsEl ||
-    !paginationEl ||
-    !modalEl ||
-    !modalTitleEl ||
-    !modalImgEl ||
-    !modalDescEl ||
-    !modalCloseBtn
+    !formPencarian ||
+    !masukanKueri ||
+    !pesanPencarianElemen ||
+    !hasilGambarElemen ||
+    !elemenPaginasi ||
+    !modalDetailElemen ||
+    !judulDetailElemen ||
+    !gambarDetailElemen ||
+    !deskripsiDetailElemen ||
+    !tombolTutupModal
   )
     return;
 
-  let currentQuery = '';
-  let currentPage = 1;
-  let totalPages = 0;
-  let totalHits = 0;
+  let kueriSekarang = '';
+  let halamanSekarang = 1;
+  let jumlahHalaman = 0;
+  let totalHasil = 0;
 
-  // simpan item halaman sekarang untuk modal detail
-  let currentItems = [];
+  // Menyimpan item gambar yang sedang ditampilkan untuk kebutuhan modal detail
+  let daftarItemSekarang = [];
 
-  function openModal(item) {
-    modalTitleEl.textContent = item.title || 'Detail';
-    const imgUrl = item.thumbUrl || ''; // pakai thumbnail juga di modal
-    if (imgUrl) {
-      modalImgEl.src = imgUrl;
-      modalImgEl.alt = item.title || '';
+  // Menampilkan modal detail ketika pengguna menekan tombol "Detail"
+  function bukaModalDetail(item) {
+    judulDetailElemen.textContent = item.judul || item.title || 'Detail';
+
+    const urlGambarKecil = item.urlKecil || item.thumbUrl || '';
+    if (urlGambarKecil) {
+      gambarDetailElemen.src = urlGambarKecil;
+      gambarDetailElemen.alt = item.judul || item.title || '';
     } else {
-      modalImgEl.src = '';
-      modalImgEl.alt = '';
+      gambarDetailElemen.src = '';
+      gambarDetailElemen.alt = '';
     }
 
-    const desc = item.description || 'Tidak ada deskripsi dari NASA.';
-    modalDescEl.textContent = desc;
+    const deskripsi = item.deskripsi || item.description || 'Tidak ada deskripsi dari NASA.';
+    deskripsiDetailElemen.textContent = deskripsi;
 
-    modalEl.classList.remove('hidden');
+    modalDetailElemen.classList.remove('hidden');
   }
 
-  function closeModal() {
-    modalEl.classList.add('hidden');
+  // Menutup modal detail
+  function tutupModalDetail() {
+    modalDetailElemen.classList.add('hidden');
   }
 
-  modalCloseBtn.addEventListener('click', closeModal);
-  modalEl.addEventListener('click', (e) => {
-    if (e.target === modalEl) closeModal();
+  tombolTutupModal.addEventListener('click', tutupModalDetail);
+  modalDetailElemen.addEventListener('click', (peristiwa) => {
+    if (peristiwa.target === modalDetailElemen) tutupModalDetail();
   });
 
-  function renderResults(items) {
-    currentItems = items || [];
-  
-    if (!items || items.length === 0) {
-      resultsEl.innerHTML = '';
+  // Menampilkan kartu-kartu hasil gambar
+  function tampilkanHasil(item) {
+    daftarItemSekarang = item || [];
+
+    if (!item || item.length === 0) {
+      hasilGambarElemen.innerHTML = '';
       return;
     }
-  
-    resultsEl.innerHTML = items
-      .map((item, idx) => {
-        const safeTitle = item.title || 'Untitled';
-        const fullDesc = item.description || '';
-        const safeDesc =
-          fullDesc.length > 220 ? fullDesc.slice(0, 220) + '...' : fullDesc;
-        const img = item.thumbUrl || '';
-  
+
+    hasilGambarElemen.innerHTML = item
+      .map((data, indeks) => {
+        const judulAman = data.judul || data.title || 'Untitled';
+        const deskripsiPenuh = data.deskripsi || data.description || '';
+        const deskripsiSingkat =
+          deskripsiPenuh.length > 220
+            ? deskripsiPenuh.slice(0, 220) + '...'
+            : deskripsiPenuh;
+        const urlGambarKecil = data.urlKecil || data.thumbUrl || '';
+
         return `
           <article class="rounded-md border border-slate-800 bg-black/80 overflow-hidden flex flex-col h-full">
             <div class="w-full h-40 bg-slate-900 overflow-hidden flex items-center justify-center">
               ${
-                img
-                  ? `<img src="${img}" alt="${safeTitle}" class="w-full h-full object-cover" />`
+                urlGambarKecil
+                  ? `<img src="${urlGambarKecil}" alt="${judulAman}" class="w-full h-full object-cover" />`
                   : '<div class="w-full h-full flex items-center justify-center text-[0.7rem] text-slate-500">No preview</div>'
               }
             </div>
             <div class="p-3 flex-1 flex flex-col justify-between space-y-2">
               <div class="space-y-1">
                 <h2 class="text-xs font-semibold text-slate-50 line-clamp-2">
-                  ${safeTitle}
+                  ${judulAman}
                 </h2>
                 <p class="text-[0.7rem] text-slate-300 leading-relaxed line-clamp-2">
-                  ${safeDesc}
+                  ${deskripsiSingkat}
                 </p>
               </div>
               <div class="pt-1 flex justify-end">
                 <button
                   type="button"
-                  data-detail-idx="${idx}"
+                  data-detail-idx="${indeks}"
                   class="text-[0.7rem] text-blue-400 hover:underline"
                 >
                   Detail
@@ -107,64 +118,69 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
       })
       .join('');
-  
-    // pasang event listener untuk tombol Detail
-    resultsEl
+
+    // Pasang event klik pada setiap tombol "Detail"
+    hasilGambarElemen
       .querySelectorAll('button[data-detail-idx]')
-      .forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const idx = parseInt(btn.getAttribute('data-detail-idx') || '0', 10);
-          const item = currentItems[idx];
-          if (item) openModal(item);
+      .forEach((tombol) => {
+        tombol.addEventListener('click', () => {
+          const indeks = parseInt(
+            tombol.getAttribute('data-detail-idx') || '0',
+            10
+          );
+          const itemDipilih = daftarItemSekarang[indeks];
+          if (itemDipilih) bukaModalDetail(itemDipilih);
         });
       });
   }
 
-  function renderPagination() {
-    paginationEl.innerHTML = '';
+  // Menampilkan tombol-tombol paginasi
+  function tampilkanPaginasi() {
+    elemenPaginasi.innerHTML = '';
 
-    if (!currentQuery || totalPages <= 1) {
+    if (!kueriSekarang || jumlahHalaman <= 1) {
       return;
     }
 
-    const maxButtons = 5;
-    let start = Math.max(1, currentPage - 2);
-    let end = Math.min(totalPages, currentPage + 2);
+    const jumlahTombolMaks = 5;
+    let awal = Math.max(1, halamanSekarang - 2);
+    let akhir = Math.min(jumlahHalaman, halamanSekarang + 2);
 
-    // rapikan agar tidak lewat totalPages dan maxButtons
-    if (end - start + 1 > maxButtons) {
-      end = start + maxButtons - 1;
+    if (akhir - awal + 1 > jumlahTombolMaks) {
+      akhir = awal + jumlahTombolMaks - 1;
     }
-    if (end > totalPages) end = totalPages;
-    if (end - start + 1 < maxButtons) {
-      start = Math.max(1, end - maxButtons + 1);
+    if (akhir > jumlahHalaman) akhir = jumlahHalaman;
+    if (akhir - awal + 1 < jumlahTombolMaks) {
+      awal = Math.max(1, akhir - jumlahTombolMaks + 1);
     }
-    if (start < 1) start = 1;
+    if (awal < 1) awal = 1;
 
-    const parts = [];
+    const bagian = [];
 
-    // Prev
-    parts.push(`
+    // Tombol "Prev"
+    bagian.push(`
       <button
         type="button"
-        data-page="${currentPage > 1 ? currentPage - 1 : 1}"
+        data-page="${halamanSekarang > 1 ? halamanSekarang - 1 : 1}"
         class="px-2 py-1 rounded border border-slate-700 bg-black/70 text-slate-200 ${
-          currentPage === 1 ? 'opacity-40 cursor-default' : 'hover:border-blue-400'
+          halamanSekarang === 1
+            ? 'opacity-40 cursor-default'
+            : 'hover:border-blue-400'
         }"
-        ${currentPage === 1 ? 'disabled' : ''}
+        ${halamanSekarang === 1 ? 'disabled' : ''}
       >
         Prev
       </button>
     `);
 
-    // Nomor halaman
-    for (let p = start; p <= end; p++) {
-      parts.push(`
+    // Tombol nomor halaman
+    for (let p = awal; p <= akhir; p++) {
+      bagian.push(`
         <button
           type="button"
           data-page="${p}"
           class="px-2 py-1 rounded border ${
-            p === currentPage
+            p === halamanSekarang
               ? 'border-blue-400 bg-blue-500 text-slate-950'
               : 'border-slate-700 bg-black/70 text-slate-200 hover:border-blue-400'
           }"
@@ -174,100 +190,115 @@ document.addEventListener('DOMContentLoaded', () => {
       `);
     }
 
-    // Next
-    parts.push(`
+    // Tombol "Next"
+    bagian.push(`
       <button
         type="button"
-        data-page="${currentPage < totalPages ? currentPage + 1 : totalPages}"
+        data-page="${
+          halamanSekarang < jumlahHalaman ? halamanSekarang + 1 : jumlahHalaman
+        }"
         class="px-2 py-1 rounded border border-slate-700 bg-black/70 text-slate-200 ${
-          currentPage === totalPages
+          halamanSekarang === jumlahHalaman
             ? 'opacity-40 cursor-default'
             : 'hover:border-blue-400'
         }"
-        ${currentPage === totalPages ? 'disabled' : ''}
+        ${halamanSekarang === jumlahHalaman ? 'disabled' : ''}
       >
         Next
       </button>
     `);
 
-    paginationEl.innerHTML = parts.join('');
+    elemenPaginasi.innerHTML = bagian.join('');
 
-    // Info kecil: cuma halaman
-    const info = document.createElement('span');
-    info.className = 'ml-3 text-slate-400 hidden sm:inline';
-    info.textContent = `Halaman ${currentPage} dari ${totalPages}`;
-    paginationEl.appendChild(info);
+    // Info kecil jumlah halaman
+    const infoHalaman = document.createElement('span');
+    infoHalaman.className = 'ml-3 text-slate-400 hidden sm:inline';
+    infoHalaman.textContent = `Halaman ${halamanSekarang} dari ${jumlahHalaman}`;
+    elemenPaginasi.appendChild(infoHalaman);
 
-    // Listener
-    paginationEl
+    // Pasang event klik pada tombol paginasi
+    elemenPaginasi
       .querySelectorAll('button[data-page]')
-      .forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const page = parseInt(btn.getAttribute('data-page') || '1', 10);
+      .forEach((tombol) => {
+        tombol.addEventListener('click', () => {
+          const halamanTujuan = parseInt(
+            tombol.getAttribute('data-page') || '1',
+            10
+          );
           if (
-            !Number.isNaN(page) &&
-            page !== currentPage &&
-            page >= 1 &&
-            page <= totalPages
+            !Number.isNaN(halamanTujuan) &&
+            halamanTujuan !== halamanSekarang &&
+            halamanTujuan >= 1 &&
+            halamanTujuan <= jumlahHalaman
           ) {
-            doSearch(currentQuery, page);
+            lakukanPencarian(kueriSekarang, halamanTujuan);
           }
         });
       });
   }
 
-  async function doSearch(query, page = 1) {
-    if (!query) return;
+  // Memanggil API backend untuk mencari gambar berdasarkan kueri dan halaman
+  async function lakukanPencarian(kueri, halaman = 1) {
+    if (!kueri) return;
 
-    currentQuery = query;
-    currentPage = page;
+    kueriSekarang = kueri;
+    halamanSekarang = halaman;
 
-    msgEl.textContent = 'Mencari...';
-    msgEl.className = 'text-[0.75rem] text-slate-300';
-    resultsEl.innerHTML = '';
-    paginationEl.innerHTML = '';
+    pesanPencarianElemen.textContent = 'Mencari...';
+    pesanPencarianElemen.className = 'text-[0.75rem] text-slate-300';
+    hasilGambarElemen.innerHTML = '';
+    elemenPaginasi.innerHTML = '';
 
     try {
-      const res = await fetch(
-        `/api/images/search?q=${encodeURIComponent(query)}&page=${page}`
+      const respons = await fetch(
+        `/api/images/search?q=${encodeURIComponent(
+          kueri
+        )}&page=${halaman}`
       );
-      const data = await res.json();
-      if (!res.ok) {
-        msgEl.textContent = data.error || 'Gagal mencari gambar.';
-        msgEl.className = 'text-[0.75rem] text-red-400';
+      const data = await respons.json();
+      if (!respons.ok) {
+        pesanPencarianElemen.textContent =
+          data.error || 'Gagal mencari gambar.';
+        pesanPencarianElemen.className =
+          'text-[0.75rem] text-red-400';
         return;
       }
 
-      const items = data.items || [];
-      totalHits = data.total || items.length;
-      totalPages = data.totalPages || 1;
+      const item = data.items || [];
+      totalHasil = data.total || item.length;
+      jumlahHalaman = data.totalPages || 1;
 
-      if (items.length === 0) {
-        msgEl.textContent = `Hasil: 0`;
-        msgEl.className = 'text-[0.75rem] text-slate-300';
-        resultsEl.innerHTML = '';
+      if (item.length === 0) {
+        pesanPencarianElemen.textContent = `Hasil: 0`;
+        pesanPencarianElemen.className =
+          'text-[0.75rem] text-slate-300';
+        hasilGambarElemen.innerHTML = '';
         return;
       }
 
-      // Status simpel: "Hasil: {totalHits}"
-      msgEl.textContent = `Hasil: ${totalHits}`;
-      msgEl.className = 'text-[0.75rem] text-slate-300';
+      // Tampilkan ringkas jumlah hasil
+      pesanPencarianElemen.textContent = `Hasil: ${totalHasil}`;
+      pesanPencarianElemen.className =
+        'text-[0.75rem] text-slate-300';
 
-      renderResults(items);
-      renderPagination();
-    } catch (err) {
-      console.error(err);
-      msgEl.textContent = 'Error saat menghubungi server.';
-      msgEl.className = 'text-[0.75rem] text-red-400';
-      resultsEl.innerHTML = '';
-      paginationEl.innerHTML = '';
+      tampilkanHasil(item);
+      tampilkanPaginasi();
+    } catch (kesalahan) {
+      console.error(kesalahan);
+      pesanPencarianElemen.textContent =
+        'Error saat menghubungi server.';
+      pesanPencarianElemen.className =
+        'text-[0.75rem] text-red-400';
+      hasilGambarElemen.innerHTML = '';
+      elemenPaginasi.innerHTML = '';
     }
   }
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const q = queryInput.value.trim();
-    if (!q) return;
-    doSearch(q, 1);
+  // Menangani submit form pencarian
+  formPencarian.addEventListener('submit', (peristiwa) => {
+    peristiwa.preventDefault();
+    const kueri = masukanKueri.value.trim();
+    if (!kueri) return;
+    lakukanPencarian(kueri, 1);
   });
 });

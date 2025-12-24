@@ -1,6 +1,8 @@
+// Mengambil instance mongoose dari modul db
 const { mongoose } = require('./db');
 
-const subscriberSchema = new mongoose.Schema(
+// Skema untuk menyimpan data pelanggan (subscriber) email APOD
+const skemaPelanggan = new mongoose.Schema(
   {
     email: {
       type: String,
@@ -11,10 +13,12 @@ const subscriberSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // otomatis ada createdAt, updatedAt
+    // createdAt dan updatedAt otomatis
+    timestamps: true,
   }
 );
 
-const Subscriber = mongoose.model('Subscriber', subscriberSchema);
+// Membuat model Pelanggan berdasarkan skema di atas
+const Pelanggan = mongoose.model('Pelanggan', skemaPelanggan);
 
-module.exports = Subscriber;
+module.exports = Pelanggan;

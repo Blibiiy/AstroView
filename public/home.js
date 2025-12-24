@@ -1,28 +1,34 @@
-// APOD
-async function loadApod() {
-  const mediaContainer = document.getElementById('apod-media');
-  const titleEl = document.getElementById('apod-title');
-  const dateEl = document.getElementById('apod-date');
-  const excerptEl = document.getElementById('apod-excerpt');
+// ========================
+// Memuat APOD pada halaman utama
+// ========================
+async function muatApodBeranda() {
+  const wadahMediaApod = document.getElementById('apod-media');
+  const judulApodElemen = document.getElementById('apod-title');
+  const tanggalApodElemen = document.getElementById('apod-date');
+  const ringkasanApodElemen = document.getElementById('apod-excerpt');
 
-  if (!mediaContainer || !titleEl || !dateEl || !excerptEl) return;
+  if (!wadahMediaApod || !judulApodElemen || !tanggalApodElemen || !ringkasanApodElemen) return;
 
-  mediaContainer.innerHTML =
+  // Tampilkan status sementara saat data diambil
+  wadahMediaApod.innerHTML =
     '<p class="text-xs text-slate-400">Loading...</p>';
 
   try {
-    const res = await fetch('/api/apod/today');
-    if (!res.ok) throw new Error('Gagal ambil APOD');
+    // Meminta data APOD dari backend
+    const respons = await fetch('/api/apod/today');
+    if (!respons.ok) throw new Error('Gagal ambil APOD');
 
-    const data = await res.json();
+    const data = await respons.json();
 
-    let mediaHtml = '';
+    let htmlMedia = '';
+    // Jika tipe media adalah gambar, tampilkan langsung
     if (data.media_type === 'image') {
-      mediaHtml = `
+      htmlMedia = `
         <img src="${data.url}" alt="${data.title}" class="w-full h-full object-cover" />
       `;
     } else {
-      mediaHtml = `
+      // Jika bukan gambar (mis. video), tampilkan link untuk membuka media
+      htmlMedia = `
         <div class="flex flex-col items-center justify-center gap-2 text-xs text-slate-200">
           <span>Media type: ${data.media_type}</span>
           <a href="${data.url}" target="_blank" rel="noopener noreferrer" class="text-blue-400 underline">
@@ -31,99 +37,129 @@ async function loadApod() {
         </div>
       `;
     }
-    mediaContainer.innerHTML = mediaHtml;
+    wadahMediaApod.innerHTML = htmlMedia;
 
-    titleEl.textContent = data.title || 'Astronomy Picture of the Day';
+    // Menampilkan judul APOD
+    judulApodElemen.textContent =
+      data.title || 'Astronomy Picture of the Day';
 
-    // gunakan usedDate kalau ada (bisa fallback ke yesterday)
-    const showDate = data.usedDate || data.date || '-';
-    dateEl.textContent = `Date: ${showDate}`;
+    // Jika ada tanggal fallback (usedDate), gunakan itu
+    const tanggalTampil = data.usedDate || data.date || '-';
+    tanggalApodElemen.textContent = `Date: ${tanggalTampil}`;
 
-    excerptEl.textContent = data.explanation || '';
-  } catch (err) {
-    console.error(err);
-    mediaContainer.innerHTML =
+    // Menampilkan penjelasan APOD
+    ringkasanApodElemen.textContent = data.explanation || '';
+  } catch (kesalahan) {
+    console.error(kesalahan);
+    wadahMediaApod.innerHTML =
       '<p class="text-xs text-red-400">Gagal memuat APOD.</p>';
-    titleEl.textContent = 'Error loading APOD';
-    dateEl.textContent = 'Date: -';
-    excerptEl.textContent = '';
+    judulApodElemen.textContent = 'Error loading APOD';
+    tanggalApodElemen.textContent = 'Date: -';
+    ringkasanApodElemen.textContent = '';
   }
 }
 
-// Subscribe
-function setupSubscribeForm() {
-  const form = document.getElementById('subscribe-form');
-  const emailInput = document.getElementById('email');
-  const msgEl = document.getElementById('subscribe-message');
-  if (!form || !emailInput || !msgEl) return;
+// ========================
+// Form subscribe email APOD
+// ========================
+function aturFormSubscribe() {
+  const formSubscribe = document.getElementById('subscribe-form');
+  const isianEmail = document.getElementById('email');
+  const pesanSubscribeElemen = document.getElementById('subscribe-message');
+  if (!formSubscribe || !isianEmail || !pesanSubscribeElemen) return;
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    msgEl.textContent = '';
-    const email = emailInput.value.trim();
+  formSubscribe.addEventListener('submit', async (peristiwa) => {
+    peristiwa.preventDefault();
+    pesanSubscribeElemen.textContent = '';
+
+    const email = isianEmail.value.trim();
     if (!email) {
-      msgEl.textContent = 'Email belum diisi.';
-      msgEl.className = 'text-[0.75rem] text-red-400';
+      pesanSubscribeElemen.textContent = 'Email belum diisi.';
+      pesanSubscribeElemen.className = 'text-[0.75rem] text-red-400';
       return;
     }
 
     try {
-      const res = await fetch('/api/subscribe', {
+      // Mengirim email ke backend untuk didaftarkan sebagai subscriber
+      const respons = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        msgEl.textContent = data.error || 'Gagal menyimpan.';
-        msgEl.className = 'text-[0.75rem] text-red-400';
+      const data = await respons.json();
+      if (!respons.ok) {
+        pesanSubscribeElemen.textContent =
+          data.error || 'Gagal menyimpan.';
+        pesanSubscribeElemen.className =
+          'text-[0.75rem] text-red-400';
       } else {
-        msgEl.textContent = data.message || 'Berhasil subscribe.';
-        msgEl.className = 'text-[0.75rem] text-emerald-400';
-        emailInput.value = '';
+        pesanSubscribeElemen.textContent =
+          data.message || 'Berhasil subscribe.';
+        pesanSubscribeElemen.className =
+          'text-[0.75rem] text-emerald-400';
+        isianEmail.value = '';
       }
-    } catch (err) {
-      console.error(err);
-      msgEl.textContent = 'Tidak bisa konek ke server.';
-      msgEl.className = 'text-[0.75rem] text-red-400';
+    } catch (kesalahan) {
+      console.error(kesalahan);
+      pesanSubscribeElemen.textContent =
+        'Tidak bisa konek ke server.';
+      pesanSubscribeElemen.className =
+        'text-[0.75rem] text-red-400';
     }
   });
 }
 
-// Socket: current online + total visits (per sesi/tab)
-function setupVisitorStats() {
+// ========================
+// Statistik pengunjung via Socket.IO
+// ========================
+function aturStatistikPengunjung() {
+  // Jika skrip Socket.IO belum dimuat, hentikan
   if (typeof io === 'undefined') return;
-  const socket = io();
 
-  const currentEl = document.getElementById('visitor-count');
-  const totalEl = document.getElementById('visitor-total');
+  // Membuat koneksi socket ke server
+  const soket = io();
 
-  function update(payload) {
+  const elemenSedangOnline = document.getElementById('visitor-count');
+  const elemenTotalKunjungan = document.getElementById('visitor-total');
+
+  // Fungsi pembantu untuk memperbarui tampilan jumlah pengunjung
+  function perbaruiTampilanStatistik(payload) {
     if (!payload) return;
-    if (currentEl) currentEl.textContent = String(payload.current ?? 0);
-    if (totalEl) totalEl.textContent = String(payload.total ?? 0);
+    if (elemenSedangOnline)
+      elemenSedangOnline.textContent = String(payload.current ?? 0);
+    if (elemenTotalKunjungan)
+      elemenTotalKunjungan.textContent = String(payload.total ?? 0);
   }
 
-  socket.on('visitorStats', update); // saat connect pertama
-  socket.on('visitorCount', update); // update saat ada perubahan total / current
+  // Menerima statistik awal saat pertama kali terhubung
+  soket.on('visitorStats', perbaruiTampilanStatistik);
+  // Menerima pembaruan ketika ada perubahan koneksi
+  soket.on('visitorCount', perbaruiTampilanStatistik);
 
-  // Gunakan sessionStorage: firstVisit hanya sekali per sesi/tab
+  // Menggunakan sessionStorage agar setiap tab hanya mengirim "firstVisit"
+  // satu kali selama tab tersebut hidup
   try {
-    const key = 'astrobot_session_first_visit';
-    const hasSent = sessionStorage.getItem(key);
-    if (!hasSent) {
-      socket.emit('firstVisit');
-      sessionStorage.setItem(key, '1');
+    const kunciSession = 'astroview_sesi_kunjungan_pertama';
+    const sudahKirim = sessionStorage.getItem(kunciSession);
+    if (!sudahKirim) {
+      soket.emit('firstVisit');
+      sessionStorage.setItem(kunciSession, '1');
     }
-  } catch (e) {
-    console.warn('sessionStorage tidak tersedia untuk visitor stats:', e);
-    // fallback: tetap kirim firstVisit
-    socket.emit('firstVisit');
+  } catch (kesalahan) {
+    console.warn(
+      'sessionStorage tidak tersedia untuk statistik pengunjung:',
+      kesalahan
+    );
+    // Jika sessionStorage tidak bisa dipakai, tetap kirim satu kali
+    soket.emit('firstVisit');
   }
 }
 
+// ========================
+// Inisialisasi saat DOM siap
+// ========================
 document.addEventListener('DOMContentLoaded', () => {
-  loadApod();
-  setupSubscribeForm();
-  setupVisitorStats();
+  muatApodBeranda();
+  aturFormSubscribe();
+  aturStatistikPengunjung();
 });

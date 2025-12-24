@@ -1,303 +1,340 @@
+// Memuat konfigurasi lingkungan dari file .env
 require('dotenv').config();
+
+// Memuat library yang dibutuhkan untuk server HTTP dan WebSocket
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const { Server } = require('socket.io');
 const cron = require('node-cron');
 
+// Memuat fungsi-fungsi layanan NASA
 const {
-  getApod,
-  getApodWithFallback,
-  formatDate,
-  searchNasaImages,
-  getRecentEonetEvents,
+  ambilApod,
+  ambilApodDenganCadangan,
+  formatTanggal,
+  cariGambarNasa,
+  ambilKejadianEonetTerbaru,
 } = require('./services/nasaService');
-const { connectDB } = require('./models/db');
-const Subscriber = require('./models/Subscriber');
-const { sendApodEmail } = require('./services/emailService');
-const { getOrCreateStatsDoc } = require('./models/Stats');
 
+// Koneksi basis data dan model yang digunakan
+const { hubungkanBasisData } = require('./models/db');
+const Pelanggan = require('./models/Subscriber');
+const { kirimEmailApod } = require('./services/emailService');
+const { ambilAtauBuatDokumenStatistik } = require('./models/Stats');
+
+// Port server diambil dari variabel lingkungan atau default 3000
 const PORT = process.env.PORT || 3000;
 
-async function startServer() {
-  await connectDB();
+// Fungsi utama untuk memulai server AstroView
+async function mulaiServer() {
+  // Menghubungkan aplikasi ke MongoDB
+  await hubungkanBasisData();
 
-  // Inisialisasi statistik global dari database
-  const statsDoc = await getOrCreateStatsDoc();
-  let totalVisits = statsDoc.totalVisits || 0;
+  // Mengambil atau membuat dokumen statistik global
+  const dokumenStatistik = await ambilAtauBuatDokumenStatistik();
+  let jumlahKunjungan = dokumenStatistik.jumlahKunjungan || 0;
 
-  const app = express();
-  const server = http.createServer(app);
+  const aplikasi = express();
+  const serverHttp = http.createServer(aplikasi);
 
-  app.use(cors());
-  app.use(express.json());
-  app.use(express.static('public'));
+  // Middleware umum
+  aplikasi.use(cors());
+  aplikasi.use(express.json());
+  aplikasi.use(express.static('public'));
 
   // =========================
-  // APOD today (dengan fallback today -> yesterday)
+  // Endpoint: APOD hari ini (dengan fallback kemarin)
   // =========================
-  app.get('/api/apod/today', async (req, res) => {
+  aplikasi.get('/api/apod/today', async (permintaan, tanggapan) => {
     try {
-      const { apod, usedDate } = await getApodWithFallback();
+      // Mengambil APOD dengan mekanisme fallback
+      const { apod, tanggalDipakai } = await ambilApodDenganCadangan();
 
-      res.json({
+      tanggapan.json({
         date: apod.date,
-        usedDate,
+        usedDate: tanggalDipakai,
         title: apod.title,
         explanation: apod.explanation,
         media_type: apod.media_type,
         url: apod.url,
         hdurl: apod.hdurl,
       });
-    } catch (err) {
-      console.error('Error get /api/apod/today:', err.message);
-      if (err.response) {
-        console.error('NASA error data:', err.response.data);
+    } catch (kesalahan) {
+      console.error('Error get /api/apod/today:', kesalahan.message);
+      if (kesalahan.response) {
+        console.error('NASA error data:', kesalahan.response.data);
       }
-      res.status(500).json({ error: 'Gagal mengambil APOD dari NASA' });
+      tanggapan
+        .status(500)
+        .json({ error: 'Gagal mengambil APOD dari NASA' });
     }
   });
 
   // =========================
-  // Subscribe APOD
+  // Endpoint: daftar pelanggan APOD
   // =========================
-  app.post('/api/subscribe', async (req, res) => {
+  aplikasi.post('/api/subscribe', async (permintaan, tanggapan) => {
     try {
-      const { email } = req.body;
+      const { email } = permintaan.body;
 
+      // Validasi sederhana email tidak boleh kosong dan harus string
       if (!email || typeof email !== 'string') {
-        return res.status(400).json({ error: 'Email wajib diisi.' });
+        return tanggapan
+          .status(400)
+          .json({ error: 'Email wajib diisi.' });
       }
 
-      const trimmed = email.trim().toLowerCase();
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(trimmed)) {
-        return res.status(400).json({ error: 'Format email tidak valid.' });
+      const emailDipangkas = email.trim().toLowerCase();
+      const polaEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!polaEmail.test(emailDipangkas)) {
+        return tanggapan
+          .status(400)
+          .json({ error: 'Format email tidak valid.' });
       }
 
-      let subscriber = await Subscriber.findOne({ email: trimmed });
-      if (subscriber) {
-        return res
-          .status(200)
-          .json({ message: 'Email sudah terdaftar sebagai subscriber.' });
+      // Cek apakah email sudah pernah terdaftar
+      let pelanggan = await Pelanggan.findOne({ email: emailDipangkas });
+      if (pelanggan) {
+        return tanggapan.status(200).json({
+          message: 'Email sudah terdaftar sebagai subscriber.',
+        });
       }
 
-      subscriber = await Subscriber.create({ email: trimmed });
+      // Menyimpan email baru ke basis data
+      pelanggan = await Pelanggan.create({ email: emailDipangkas });
 
-      return res.status(201).json({
+      return tanggapan.status(201).json({
         message: 'Berhasil subscribe APOD harian.',
-        email: subscriber.email,
+        email: pelanggan.email,
       });
-    } catch (err) {
-      console.error('Error POST /api/subscribe:', err.message);
-      if (err.code === 11000) {
-        return res
-          .status(200)
-          .json({ message: 'Email sudah terdaftar sebagai subscriber.' });
+    } catch (kesalahan) {
+      console.error('Error POST /api/subscribe:', kesalahan.message);
+      if (kesalahan.code === 11000) {
+        return tanggapan.status(200).json({
+          message: 'Email sudah terdaftar sebagai subscriber.',
+        });
       }
-      return res.status(500).json({ error: 'Gagal menyimpan subscriber.' });
+      return tanggapan
+        .status(500)
+        .json({ error: 'Gagal menyimpan subscriber.' });
     }
   });
 
   // =========================
-  // Kirim APOD via email (manual test)
+  // Endpoint: kirim APOD via email (manual test)
   // =========================
-  app.post('/api/send-apod-email', async (req, res) => {
+  aplikasi.post('/api/send-apod-email', async (permintaan, tanggapan) => {
     try {
-      const today = formatDate(new Date());
-      const apod = await getApod(today);
+      const hariIni = formatTanggal(new Date());
+      const apod = await ambilApod(hariIni);
 
-      const subscribers = await Subscriber.find({});
-      if (subscribers.length === 0) {
-        return res
-          .status(200)
-          .json({ message: 'Tidak ada subscriber untuk dikirimi email.' });
+      const daftarPelanggan = await Pelanggan.find({});
+      if (daftarPelanggan.length === 0) {
+        return tanggapan.status(200).json({
+          message: 'Tidak ada subscriber untuk dikirimi email.',
+        });
       }
 
-      let success = 0;
-      let failed = 0;
+      let jumlahSukses = 0;
+      let jumlahGagal = 0;
 
-      for (const sub of subscribers) {
+      // Mengirim email ke setiap pelanggan
+      for (const pel of daftarPelanggan) {
         try {
-          await sendApodEmail(sub.email, apod);
-          success++;
+          await kirimEmailApod(pel.email, apod);
+          jumlahSukses++;
         } catch (e) {
-          console.error(`Gagal kirim ke ${sub.email}:`, e.message);
-          failed++;
+          console.error(`Gagal kirim ke ${pel.email}:`, e.message);
+          jumlahGagal++;
         }
       }
 
-      return res.status(200).json({
+      return tanggapan.status(200).json({
         message: 'Selesai mengirim email APOD hari ini.',
-        total: subscribers.length,
-        success,
-        failed,
+        total: daftarPelanggan.length,
+        success: jumlahSukses,
+        failed: jumlahGagal,
       });
-    } catch (err) {
-      console.error('Error POST /api/send-apod-email:', err.message);
-      return res.status(500).json({ error: 'Gagal mengirim email APOD.' });
+    } catch (kesalahan) {
+      console.error('Error POST /api/send-apod-email:', kesalahan.message);
+      return tanggapan
+        .status(500)
+        .json({ error: 'Gagal mengirim email APOD.' });
     }
   });
 
   // =========================
-  // NASA Image search
+  // Endpoint: pencarian gambar NASA
   // =========================
-  // GET /api/images/search?q=keyword&page=1
-  app.get('/api/images/search', async (req, res) => {
+  aplikasi.get('/api/images/search', async (permintaan, tanggapan) => {
     try {
-      const q = (req.query.q || '').toString().trim();
-      const page = parseInt(req.query.page || '1', 10) || 1;
+      const kueri = (permintaan.query.q || '').toString().trim();
+      const halaman = parseInt(permintaan.query.page || '1', 10) || 1;
 
-      if (!q) {
-        return res.status(400).json({ error: 'Parameter q wajib diisi.' });
+      if (!kueri) {
+        return tanggapan
+          .status(400)
+          .json({ error: 'Parameter q wajib diisi.' });
       }
 
-      const { items, total, perPage } = await searchNasaImages(q, page);
-      const totalPages =
-        perPage > 0 ? Math.ceil(total / perPage) : items.length ? 1 : 0;
-
-      res.json({
-        query: q,
-        page,
-        perPage,
+      const {
+        item,
         total,
-        totalPages,
-        items,
-      });
-    } catch (err) {
-      console.error('Error GET /api/images/search:', err.message);
-      res.status(500).json({ error: 'Gagal mencari gambar di NASA.' });
-    }
-  });
+        perHalaman,
+      } = await cariGambarNasa(kueri, halaman);
+      const jumlahHalaman =
+        perHalaman > 0 ? Math.ceil(total / perHalaman) : item.length ? 1 : 0;
 
-  // =========================
-  // EONET: Natural Events
-  // =========================
-  // GET /api/eonet/events?days=&limit=&status=
-  app.get('/api/eonet/events', async (req, res) => {
-    try {
-      const days = parseInt(req.query.days || '10', 10) || 10;
-      const limit = parseInt(req.query.limit || '20', 10) || 20;
-      const status = (req.query.status || 'open').toString();
-
-      const events = await getRecentEonetEvents({
-        days,
-        limit,
-        status,
-        categoryId: null,
+      tanggapan.json({
+        query: kueri,
+        page: halaman,
+        perPage: perHalaman,
+        total,
+        totalPages: jumlahHalaman,
+        items: item,
       });
-
-      res.json({
-        days,
-        limit,
-        status,
-        count: events.length,
-        events,
-      });
-    } catch (err) {
-      console.error('Error GET /api/eonet/events:', err.message);
-      res
+    } catch (kesalahan) {
+      console.error('Error GET /api/images/search:', kesalahan.message);
+      tanggapan
         .status(500)
-        .json({ error: 'Gagal mengambil data EONET dari NASA.' });
+        .json({ error: 'Gagal mencari gambar di NASA.' });
     }
   });
 
   // =========================
-  // Socket.IO: visitor stats (disimpan di DB)
+  // Endpoint: data kejadian EONET
   // =========================
-  const io = new Server(server, {
+  aplikasi.get('/api/eonet/events', async (permintaan, tanggapan) => {
+    try {
+      const hari = parseInt(permintaan.query.days || '10', 10) || 10;
+      const batas = parseInt(permintaan.query.limit || '20', 10) || 20;
+      const status = (permintaan.query.status || 'open').toString();
+
+      const daftarKejadian = await ambilKejadianEonetTerbaru({
+        hari,
+        batas,
+        status,
+        idKategori: null,
+      });
+
+      tanggapan.json({
+        days: hari,
+        limit: batas,
+        status,
+        count: daftarKejadian.length,
+        events: daftarKejadian,
+      });
+    } catch (kesalahan) {
+      console.error('Error GET /api/eonet/events:', kesalahan.message);
+      tanggapan.status(500).json({
+        error: 'Gagal mengambil data EONET dari NASA.',
+      });
+    }
+  });
+
+  // =========================
+  // Socket.IO: statistik pengunjung
+  // =========================
+  const io = new Server(serverHttp, {
     cors: {
       origin: '*',
     },
   });
 
-  let currentConnections = 0;
+  // Menyimpan berapa koneksi yang sedang aktif
+  let koneksiAktif = 0;
 
   io.on('connection', (socket) => {
     console.log('Client terhubung:', socket.id);
-    currentConnections++;
+    koneksiAktif++;
 
-    // kirim stats awal ke client baru
+    // Mengirim statistik awal ke client yang baru terhubung
     socket.emit('visitorStats', {
-      current: currentConnections,
-      total: totalVisits,
+      current: koneksiAktif,
+      total: jumlahKunjungan,
     });
 
-    // browser kirim event firstVisit saat sesi/tab baru
+    // Event dari browser: sesi/tab baru pertama kali membuka AstroView
     socket.on('firstVisit', async () => {
       try {
-        totalVisits++;
+        jumlahKunjungan++;
 
-        // update DB
-        statsDoc.totalVisits = totalVisits;
-        await statsDoc.save();
+        // Memperbarui dokumen statistik di basis data
+        dokumenStatistik.jumlahKunjungan = jumlahKunjungan;
+        await dokumenStatistik.save();
 
-        // broadcast ke semua client
+        // Menyiarkan update ke semua client
         io.emit('visitorCount', {
-          current: currentConnections,
-          total: totalVisits,
+          current: koneksiAktif,
+          total: jumlahKunjungan,
         });
-      } catch (err) {
-        console.error('Gagal update totalVisits di DB:', err.message);
+      } catch (kesalahan) {
+        console.error(
+          'Gagal update jumlahKunjungan di basis data:',
+          kesalahan.message
+        );
       }
     });
 
     socket.on('disconnect', () => {
       console.log('Client terputus:', socket.id);
-      currentConnections = Math.max(0, currentConnections - 1);
+      koneksiAktif = Math.max(0, koneksiAktif - 1);
       io.emit('visitorCount', {
-        current: currentConnections,
-        total: totalVisits,
+        current: koneksiAktif,
+        total: jumlahKunjungan,
       });
     });
   });
 
   // =========================
-  // Start server + Cron APOD email
+  // Menjalankan server + cron APOD email harian
   // =========================
-  server.listen(PORT, () => {
-    console.log(`AstroBot backend berjalan di http://localhost:${PORT}`);
+  serverHttp.listen(PORT, () => {
+    console.log(`AstroView backend berjalan di http://localhost:${PORT}`);
 
+    // Menjadwalkan pengiriman email APOD setiap hari jam 07:00
     cron.schedule('0 7 * * *', async () => {
       console.log('[CRON] Mulai kirim email APOD harian...');
 
       try {
-        const today = formatDate(new Date());
-        const apod = await getApod(today);
-        const subscribers = await Subscriber.find({});
+        const hariIni = formatTanggal(new Date());
+        const apod = await ambilApod(hariIni);
+        const daftarPelanggan = await Pelanggan.find({});
 
-        if (subscribers.length === 0) {
+        if (daftarPelanggan.length === 0) {
           console.log('[CRON] Tidak ada subscriber untuk dikirimi email.');
           return;
         }
 
-        let success = 0;
-        let failed = 0;
+        let jumlahSukses = 0;
+        let jumlahGagal = 0;
 
-        for (const sub of subscribers) {
+        for (const pel of daftarPelanggan) {
           try {
-            await sendApodEmail(sub.email, apod);
-            success++;
+            await kirimEmailApod(pel.email, apod);
+            jumlahSukses++;
           } catch (e) {
             console.error(
-              `[CRON] Gagal kirim ke ${sub.email}:`,
+              `[CRON] Gagal kirim ke ${pel.email}:`,
               e.message
             );
-            failed++;
+            jumlahGagal++;
           }
         }
 
         console.log(
-          `[CRON] Selesai kirim APOD: total=${subscribers.length}, sukses=${success}, gagal=${failed}`
+          `[CRON] Selesai kirim APOD: total=${daftarPelanggan.length}, sukses=${jumlahSukses}, gagal=${jumlahGagal}`
         );
-      } catch (err) {
-        console.error('[CRON] Error kirim email APOD:', err.message);
+      } catch (kesalahan) {
+        console.error('[CRON] Error kirim email APOD:', kesalahan.message);
       }
     });
   });
 }
 
-startServer().catch((err) => {
-  console.error('Gagal start server:', err);
+// Menjalankan fungsi utama untuk memulai server
+mulaiServer().catch((kesalahan) => {
+  console.error('Gagal start server:', kesalahan);
   process.exit(1);
 });

@@ -1,95 +1,117 @@
+// Script ini mengatur pemuatan data kejadian alam (EONET) di halaman Events
 document.addEventListener('DOMContentLoaded', () => {
-  const daysSelect = document.getElementById('events-days');
-  const refreshBtn = document.getElementById('events-refresh');
-  const msgEl = document.getElementById('events-message');
-  const listEl = document.getElementById('events-list');
+  const pilihanHariElemen = document.getElementById('events-days');
+  const tombolSegarkanElemen = document.getElementById('events-refresh');
+  const pesanKejadianElemen = document.getElementById('events-message');
+  const daftarKejadianElemen = document.getElementById('events-list');
 
-  if (!daysSelect || !refreshBtn || !msgEl || !listEl) {
+  if (
+    !pilihanHariElemen ||
+    !tombolSegarkanElemen ||
+    !pesanKejadianElemen ||
+    !daftarKejadianElemen
+  ) {
     return;
   }
 
-  function formatShortDate(iso) {
+  // Mengubah format tanggal ISO menjadi YYYY-MM-DD
+  function formatTanggalPendek(iso) {
     if (!iso) return '-';
-    // 2025-12-18T13:46:00Z -> 2025-12-18
     return iso.split('T')[0] || iso;
   }
 
-  async function loadEvents() {
-    const days = daysSelect.value || '7';
+  // Mengambil data kejadian dari backend dan menampilkannya
+  async function muatKejadian() {
+    const jumlahHari = pilihanHariElemen.value || '7';
 
-    msgEl.textContent = 'Memuat data EONET...';
-    listEl.innerHTML = '';
+    pesanKejadianElemen.textContent = 'Memuat data EONET...';
+    daftarKejadianElemen.innerHTML = '';
 
-    const params = new URLSearchParams({
-      days,
+    const parameter = new URLSearchParams({
+      days: jumlahHari,
       limit: '20',
       status: 'open',
     });
 
     try {
-      const res = await fetch(`/api/eonet/events?${params.toString()}`);
-      const data = await res.json();
+      const respons = await fetch(
+        `/api/eonet/events?${parameter.toString()}`
+      );
+      const data = await respons.json();
 
-      if (!res.ok) {
+      if (!respons.ok) {
         throw new Error(data.error || 'Gagal mengambil data EONET.');
       }
 
-      const events = data.events || [];
-      if (events.length === 0) {
-        msgEl.textContent = 'Tidak ada event untuk rentang hari ini.';
-        listEl.innerHTML = '';
+      const daftarKejadian = data.events || [];
+      if (daftarKejadian.length === 0) {
+        pesanKejadianElemen.textContent =
+          'Tidak ada event untuk rentang hari ini.';
+        daftarKejadianElemen.innerHTML = '';
         return;
       }
 
-      msgEl.textContent = `Menampilkan ${events.length} event dalam ${data.days} hari terakhir.`;
+      pesanKejadianElemen.textContent = `Menampilkan ${daftarKejadian.length} event dalam ${data.days} hari terakhir.`;
 
-      listEl.innerHTML = events
-        .map((ev) => {
-          const title = ev.title || 'Untitled event';
-          const cat = ev.categoryTitle || 'Uncategorized';
-          const date = formatShortDate(ev.date);
-          const sourceTitle = ev.sourceTitle || '';
-          const sourceUrl = ev.sourceUrl || '';
-          const fullDesc = ev.description || '';
+      // Menyusun HTML kartu kejadian
+      daftarKejadianElemen.innerHTML = daftarKejadian
+        .map((kejadian) => {
+          const judul = kejadian.judul || kejadian.title || 'Untitled event';
+          const kategori =
+            kejadian.judulKategori || kejadian.categoryTitle || 'Uncategorized';
+          const tanggal = formatTanggalPendek(
+            kejadian.tanggal || kejadian.date
+          );
+          const judulSumber =
+            kejadian.judulSumber || kejadian.sourceTitle || '';
+          const urlSumber = kejadian.urlSumber || kejadian.sourceUrl || '';
+          const deskripsiPenuh =
+            kejadian.deskripsi || kejadian.description || '';
 
-          const desc =
-            fullDesc.length > 140
-              ? fullDesc.slice(0, 140) + '...'
-              : fullDesc;
+          const deskripsiRingkas =
+            deskripsiPenuh.length > 140
+              ? deskripsiPenuh.slice(0, 140) + '...'
+              : deskripsiPenuh;
 
-          let coordText = '';
-          if (Array.isArray(ev.coordinates) && ev.coordinates.length >= 2) {
-            const [lon, lat] = ev.coordinates;
-            coordText = `Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)}`;
+          let teksKoordinat = '';
+          const koordinat =
+            kejadian.koordinat || kejadian.coordinates || null;
+          if (Array.isArray(koordinat) && koordinat.length >= 2) {
+            const [bujur, lintang] = koordinat;
+            teksKoordinat = `Lat: ${lintang.toFixed(
+              2
+            )}, Lon: ${bujur.toFixed(2)}`;
           }
 
           return `
             <article class="rounded-md border border-slate-800 bg-black/92 px-3 py-3 flex flex-col h-full">
               <p class="text-[0.7rem] text-slate-400">
-                ${cat}${date && date !== '-' ? ` • ${date}` : ''}
+                ${kategori}${
+            tanggal && tanggal !== '-' ? ` • ${tanggal}` : ''
+          }
               </p>
               <h2 class="mt-1 text-sm font-semibold text-slate-50 line-clamp-2">
-                ${title}
+                ${judul}
               </h2>
               ${
-                desc
+                deskripsiRingkas
                   ? `<p class="mt-1 text-[0.75rem] text-slate-300 leading-relaxed line-clamp-3">
-                       ${desc}
+                       ${deskripsiRingkas}
                      </p>`
                   : ''
               }
 
               <div class="mt-2 flex items-center justify-between text-[0.7rem] text-slate-400">
                 <span class="mr-2 truncate">
-                  ${coordText}
+                  ${teksKoordinat}
                 </span>
                 ${
-                  sourceUrl
-                    ? `<a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">
-                         Source${sourceTitle ? `: ${sourceTitle}` : ''}
+                  urlSumber
+                    ? `<a href="${urlSumber}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">
+                         Source${judulSumber ? `: ${judulSumber}` : ''}
                        </a>`
-                    : sourceTitle
-                    ? `<span>Source: ${sourceTitle}</span>`
+                    : judulSumber
+                    ? `<span>Source: ${judulSumber}</span>`
                     : ''
                 }
               </div>
@@ -97,15 +119,16 @@ document.addEventListener('DOMContentLoaded', () => {
           `;
         })
         .join('');
-    } catch (err) {
-      console.error(err);
-      msgEl.textContent = 'Gagal memuat data EONET.';
-      listEl.innerHTML = '';
+    } catch (kesalahan) {
+      console.error(kesalahan);
+      pesanKejadianElemen.textContent = 'Gagal memuat data EONET.';
+      daftarKejadianElemen.innerHTML = '';
     }
   }
 
-  refreshBtn.addEventListener('click', () => loadEvents());
-  daysSelect.addEventListener('change', () => loadEvents());
+  tombolSegarkanElemen.addEventListener('click', () => muatKejadian());
+  pilihanHariElemen.addEventListener('change', () => muatKejadian());
 
-  loadEvents();
+  // Muat data pertama kali
+  muatKejadian();
 });

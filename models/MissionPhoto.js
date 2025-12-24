@@ -1,32 +1,41 @@
+// Mengambil instance mongoose dari modul db
 const { mongoose } = require('./db');
 
-const missionPhotoSchema = new mongoose.Schema(
+// Skema untuk menyimpan foto misi (misalnya dari rover Mars)
+const skemaFotoMisi = new mongoose.Schema(
   {
-    sessionId: {
+    // ID sesi (misal sesi chat / sesi eksplorasi) untuk mengelompokkan foto
+    idSesi: {
       type: String,
       required: true,
       index: true,
     },
-    photoId: {
+    // ID foto dari API eksternal
+    idFoto: {
       type: Number,
       required: true,
     },
-    imgSrc: {
+    // URL gambar foto
+    urlGambar: {
       type: String,
       required: true,
     },
+    // Nama rover yang mengambil gambar
     rover: {
       type: String,
       required: true,
     },
-    camera: {
+    // Nama kamera yang digunakan
+    kamera: {
       type: String,
       required: true,
     },
-    earthDate: {
+    // Tanggal di Bumi ketika foto diambil
+    tanggalBumi: {
       type: String,
     },
-    fullData: {
+    // Menyimpan seluruh data asli dari API jika diperlukan kembali
+    dataLengkap: {
       type: Object,
     },
   },
@@ -35,6 +44,7 @@ const missionPhotoSchema = new mongoose.Schema(
   }
 );
 
-const MissionPhoto = mongoose.model('MissionPhoto', missionPhotoSchema);
+// Membuat model FotoMisi berdasarkan skema di atas
+const FotoMisi = mongoose.model('FotoMisi', skemaFotoMisi);
 
-module.exports = MissionPhoto;
+module.exports = FotoMisi;
