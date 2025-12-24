@@ -275,6 +275,3 @@ SOFTWARE.
 - NIM   : 23343042  
 - GitHub: _[akan ditambahkan manual]_  
 
----
-
-Jika Anda menemukan bug, memiliki saran fitur, atau ingin mengembangkan AstroView lebih lanjut (misalnya menambah modul baru seperti data cuaca ruang angkasa atau misi rover Mars), silakan buat _issue_ atau _pull request_ di repositori ini. Kontribusi sangat terbuka. 😊
