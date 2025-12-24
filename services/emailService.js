@@ -10,6 +10,12 @@ const {
   EMAIL_FROM,
 } = process.env;
 
+console.log('[DEBUG SMTP] SMTP_HOST:', SMTP_HOST);
+console.log('[DEBUG SMTP] SMTP_PORT:', SMTP_PORT);
+console.log('[DEBUG SMTP] SMTP_USER:', SMTP_USER ? '(terisi)' : '(kosong)');
+console.log('[DEBUG SMTP] SMTP_PASS:', SMTP_PASS ? '(terisi)' : '(kosong)');
+console.log('[DEBUG SMTP] EMAIL_FROM:', EMAIL_FROM);
+
 // Jika konfigurasi belum lengkap, beri peringatan di console
 if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
   console.warn(
