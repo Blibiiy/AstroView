@@ -6,13 +6,13 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.x",
-    "socket.io": "^4.x",
-    "mongoose": "^7.x",
-    "cors": "^2.x",
-    "node-cron": "^3.x",
-    "axios": "^1.x",
-    "dotenv": "^16.x",
-    "nodemailer": "^6.x"
+    "axios": "^1.13.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "mongoose": "^7.8.8",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.10.1",
+    "socket.io": "^4.8.1"
   }
 }
