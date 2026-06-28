@@ -258,7 +258,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
 SOFTWARE.
 ```
-
 ---
 
 ## Pengembang
@@ -268,10 +267,3 @@ SOFTWARE.
 - Nama  : Muhammad Isra Al Fattah  
 - NIM   : 23343045  
 - GitHub: [Blibiiy](https://github.com/Blibiiy)
-
-**Pengembang 2**
-
-- Nama  : Labib Althaf  
-- NIM   : 23343042  
-- GitHub: _[akan ditambahkan manual]_  
-
